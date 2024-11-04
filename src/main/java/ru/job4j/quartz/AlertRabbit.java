@@ -14,16 +14,18 @@ import static org.quartz.SimpleScheduleBuilder.*;
 
 public class AlertRabbit {
     public static void main(String[] args) {
+        Properties properties = loadProperties();
+        int interval = Integer.parseInt(properties.getProperty("rabbit.interval"));
         try {
             Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
             scheduler.start();
             JobDataMap data = new JobDataMap();
-            data.put("dbProperties", loadProperties());
+            data.put("connection", getConnection(properties));
             JobDetail job = newJob(Rabbit.class)
                     .usingJobData(data)
                     .build();
             SimpleScheduleBuilder times = simpleSchedule()
-                    .withIntervalInSeconds(getInterval())
+                    .withIntervalInSeconds(interval)
                     .repeatForever();
             Trigger trigger = newTrigger()
                     .startNow()
@@ -41,24 +43,30 @@ public class AlertRabbit {
         @Override
         public void execute(JobExecutionContext context) {
             System.out.println("Rabbit runs here ...");
-            Properties properties = (Properties) context.getJobDetail().getJobDataMap().get("dbProperties");
-            try (Connection connection = DriverManager.getConnection(
-                    properties.getProperty("url"),
-                    properties.getProperty("username"),
-                    properties.getProperty("password"));
-                 PreparedStatement ps = connection.prepareStatement(
-                         "INSERT INTO rabbit (created_date) VALUES (?)")) {
+            Connection connection = (Connection) context.getJobDetail().getJobDataMap().get("connection");
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT INTO rabbit (created_date) VALUES (?)")) {
                 ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
                 ps.executeUpdate();
             } catch (SQLException e) {
-                throw new RuntimeException("Error connecting to database", e);
+                throw new RuntimeException("Error executing database query", e);
             }
         }
     }
 
-    private static int getInterval() {
-        Properties properties = loadProperties();
-        return Integer.parseInt(properties.getProperty("rabbit.interval"));
+    private static Connection getConnection(Properties properties) {
+        Connection connection;
+        try {
+            Class.forName(properties.getProperty("driver-class-name"));
+            connection = DriverManager.getConnection(
+                    properties.getProperty("url"),
+                    properties.getProperty("username"),
+                    properties.getProperty("password")
+            );
+        } catch (ClassNotFoundException | SQLException e) {
+            throw new RuntimeException("Error connecting to database", e);
+        }
+        return connection;
     }
 
     private static Properties loadProperties() {
