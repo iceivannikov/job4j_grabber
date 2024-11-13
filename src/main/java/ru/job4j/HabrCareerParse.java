@@ -28,13 +28,35 @@ public class HabrCareerParse {
                     Element titleElement = row.select(".vacancy-card__title a").first();
                     String vacancyName = Objects.requireNonNull(titleElement).text();
                     String link = String.format("%s%s", SOURCE_LINK, titleElement.attr("href"));
+                    String description = retrieveDescription(link);
                     Element dateElement = row.select(".vacancy-card__date time").first();
                     String date = Objects.requireNonNull(dateElement).attr("datetime");
-                    System.out.printf("%s %s %s%n", vacancyName, link, date);
+                    System.out.printf("%s %s %s%n %s%n", vacancyName, link, date, description);
                 });
             }
         } catch (IOException e) {
             throw new RuntimeException("Error connecting to the site or parsing data", e);
         }
+    }
+
+    private static String retrieveDescription(String link) {
+        StringBuilder builder = new StringBuilder();
+        try {
+            Document document = Jsoup.connect(link).get();
+            Element descriptionElement = document.select(".vacancy-description__text").first();
+            if (descriptionElement != null) {
+                Elements elements = descriptionElement.select("h3, p");
+                for (Element element : elements) {
+                    if (!element.text().isEmpty()) {
+                        builder.append(element.text()).append("\n");
+                    }
+                }
+            } else {
+                System.out.println("Job description not found");
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Error connecting to page or parsing data", e);
+        }
+        return builder.toString();
     }
 }
