@@ -1,4 +1,4 @@
-package ru.job4j.model;
+package ru.job4j.grabber.model;
 
 import javax.swing.*;
 import java.time.LocalDateTime;
@@ -8,8 +8,15 @@ public class Post {
     private int id;
     private String title;
     private String link;
-    private Spring description;
+    private String description;
     private LocalDateTime created;
+
+    public Post(String title, String link, String description, LocalDateTime created) {
+        this.title = title;
+        this.link = link;
+        this.description = description;
+        this.created = created;
+    }
 
     public int getId() {
         return id;
@@ -35,11 +42,11 @@ public class Post {
         this.link = link;
     }
 
-    public Spring getDescription() {
+    public String getDescription() {
         return description;
     }
 
-    public void setDescription(Spring description) {
+    public void setDescription(String description) {
         this.description = description;
     }
 
