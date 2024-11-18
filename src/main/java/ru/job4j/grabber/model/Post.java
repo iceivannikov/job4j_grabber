@@ -1,6 +1,5 @@
 package ru.job4j.grabber.model;
 
-import javax.swing.*;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
