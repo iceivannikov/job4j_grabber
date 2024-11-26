@@ -1,12 +1,8 @@
 package ru.job4j.grabber.storage;
 
 import ru.job4j.grabber.model.Post;
-import ru.job4j.grabber.quartz.AlertRabbit;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.sql.*;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -88,35 +84,5 @@ public class PsqlStore implements Store {
             throw new RuntimeException(e);
         }
         return post;
-    }
-
-    public static void main(String[] args) {
-        Properties config = new Properties();
-        try (InputStream is = AlertRabbit.class.getClassLoader()
-                .getResourceAsStream("rabbit.properties")) {
-            config.load(is);
-        } catch (IOException e) {
-            throw new RuntimeException("Error loading properties file", e);
-        }
-        PsqlStore psqlStore = new PsqlStore(config);
-        Post post = new Post("Java Developer", "https://example.com/vacancy/2",
-                "Description for Java Developer", LocalDateTime.now());
-        psqlStore.save(post);
-        psqlStore.save(new Post("Kotlin Developer", "https://example.com/vacancy/1",
-                "Description for Kotlin Developer", LocalDateTime.now()));
-        psqlStore.save(new Post("Python Developer", "https://example.com/vacancy/3",
-                "Description for Python Developer", LocalDateTime.now()));
-        psqlStore.save(new Post("Duplicate Java Developer", "https://example.com/vacancy/1",
-                "Duplicate Description", LocalDateTime.now()));
-        psqlStore.save(new Post("Another Java Developer", "https://example.com/vacancy/4",
-                "Another Java Developer Description", LocalDateTime.now()));
-
-        List<Post> posts = psqlStore.getAll();
-        System.out.println("method List<Post> getAll()");
-        posts.forEach(System.out::println);
-
-        Post post1 = psqlStore.findById(3);
-        System.out.println("method Post findById(int id)");
-        System.out.println(post1);
     }
 }
